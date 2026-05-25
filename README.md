@@ -1,58 +1,155 @@
 # php-docker-toolkit
 
-Conjunto de scripts para gerenciar ambientes PHP em Docker — sobe, para e configura containers de PHP e banco de dados, além de automatizar o clone e a preparação de projetos.
+Toolkit de automação para ambientes PHP com Docker.
+
+O objetivo deste projeto é padronizar e acelerar o onboarding de projetos PHP locais, permitindo iniciar rapidamente ambientes contendo:
+
+- PHP
+- MySQL / MariaDB
+- PostgreSQL
+- SQL Server
+- phpMyAdmin
+- Composer
+- Projetos CodeIgniter
 
 ---
 
-## Estrutura
+# Recursos
 
-```
+- Inicialização automática de containers PHP
+- Inicialização automática de bancos de dados
+- Integração com phpMyAdmin
+- Automatização de clone e setup de projetos
+- Suporte a múltiplas versões de PHP
+- Suporte a múltiplos bancos de dados
+- Scripts padronizados para ambiente local
+- Fluxo simplificado para onboarding de novos projetos
+
+---
+
+# Estrutura do Projeto
+
+```bash
 php-docker-toolkit/
-├── git-clone.sh        # Clona um repositório PHP e configura o ambiente completo
-├── stop-all.sh         # Para todos os containers Docker em execução
+├── git-clone.sh
+├── run-project.sh
+├── stop-all.sh
 ├── php/
-│   ├── start.sh        # Inicia o container PHP da versão especificada
-│   └── stop.sh         # Para todos os containers PHP
+│   ├── start.sh
+│   └── stop.sh
 └── database/
-    ├── start.sh        # Inicia o container de banco de dados especificado
-    └── stop.sh         # Para todos os containers de banco de dados
+    ├── start.sh
+    └── stop.sh
 ```
 
 ---
 
-## Pré-requisitos
+# Pré-requisitos
 
-- Docker instalado e em execução
-- Containers Docker já criados (o toolkit apenas os inicia/para), nomeados conforme o padrão:
-  - PHP: `php5`, `php7`, `php8`, etc.
-  - Banco de dados: `mysql8.0`, `mariadb10.6`, `sqlserver2019`, `postgresql15`, etc.
-- Diretório `~/www` existente (destino dos projetos clonados)
-- Arquivo `/dockers/.env` com a variável `DATABASE_SERVICE` (usado pelo `database/start.sh`)
-- Arquivo `/dockers/docker-compose-pma.yml` para subir o phpMyAdmin junto ao MySQL/MariaDB
+Antes de utilizar o toolkit, certifique-se de possuir:
+
+- Docker instalado
+- Docker Compose instalado
+- Containers previamente criados
+- Diretório `~/www`
+- Microsoft Edge (WSL/Windows)
+- Permissões de execução nos scripts
 
 ---
 
-## Guia de uso
+# Containers Esperados
 
-### Iniciar container PHP
+## PHP
+
+Exemplos:
 
 ```bash
-~/php-docker-toolkit/php/start.sh <versao>
+php56
+php70
+php74
+php82
+php84
 ```
 
-**Exemplos:**
+## Banco de Dados
+
+Exemplos:
 
 ```bash
-# Iniciar PHP 8
-~/php-docker-toolkit/php/start.sh 8
-
-# Iniciar PHP 7
-~/php-docker-toolkit/php/start.sh 7
+mysql8
+mariadb10.6
+postgresql15
+sqlserver2019
 ```
 
 ---
 
-### Parar containers PHP
+# Instalação
+
+Clone o repositório:
+
+```bash
+git clone <repo-url> ~/php-docker-toolkit
+```
+
+Adicione permissões de execução:
+
+```bash
+chmod +x ~/php-docker-toolkit/*.sh
+chmod +x ~/php-docker-toolkit/php/*.sh
+chmod +x ~/php-docker-toolkit/database/*.sh
+```
+
+Opcionalmente, adicione aliases ao `.bashrc`:
+
+```bash
+alias run-project="~/php-docker-toolkit/run-project.sh"
+alias stop-docker="~/php-docker-toolkit/stop-all.sh"
+```
+
+Depois:
+
+```bash
+source ~/.bashrc
+```
+
+---
+
+# Uso
+
+## Iniciar Projeto
+
+```bash
+~/php-docker-toolkit/run-project.sh <project> <php_version> <database>
+```
+
+### Exemplo
+
+```bash
+~/php-docker-toolkit/run-project.sh crm php82 mysql8
+```
+
+O script irá:
+
+1. Parar containers anteriores
+2. Iniciar ambiente PHP
+3. Inicializar banco de dados
+4. Exibir containers ativos
+5. Ler `.env`
+6. Abrir projeto no navegador
+7. Abrir phpMyAdmin quando aplicável
+
+---
+
+## Iniciar PHP Manualmente
+
+```bash
+~/php-docker-toolkit/php/start.sh php82
+```
+
+---
+
+## Parar Containers PHP
 
 ```bash
 ~/php-docker-toolkit/php/stop.sh
@@ -60,33 +157,15 @@ php-docker-toolkit/
 
 ---
 
-### Iniciar container de banco de dados
+## Iniciar Banco de Dados
 
 ```bash
-~/php-docker-toolkit/database/start.sh <banco><versao>
+~/php-docker-toolkit/database/start.sh mysql8
 ```
-
-**Exemplos:**
-
-```bash
-# MySQL 8.0
-~/php-docker-toolkit/database/start.sh mysql8.0
-
-# MariaDB 10.6
-~/php-docker-toolkit/database/start.sh mariadb10.6
-
-# SQL Server 2019
-~/php-docker-toolkit/database/start.sh sqlserver2019
-
-# PostgreSQL 15
-~/php-docker-toolkit/database/start.sh postgresql15
-```
-
-> Para MySQL e MariaDB, o phpMyAdmin é iniciado automaticamente via `docker-compose-pma.yml`.
 
 ---
 
-### Parar containers de banco de dados
+## Parar Bancos de Dados
 
 ```bash
 ~/php-docker-toolkit/database/stop.sh
@@ -94,7 +173,7 @@ php-docker-toolkit/
 
 ---
 
-### Parar todos os containers
+## Parar Todo Ambiente
 
 ```bash
 ~/php-docker-toolkit/stop-all.sh
@@ -102,49 +181,83 @@ php-docker-toolkit/
 
 ---
 
-### Clonar e configurar um projeto PHP
+# git-clone.sh
 
-O script `git-clone.sh` automatiza todo o fluxo de onboarding de um projeto:
+O script `git-clone.sh` automatiza o processo de setup de novos projetos.
 
-1. Clona o repositório em `~/www`
-2. Ajusta permissões
-3. Configura o `.env` do projeto (URL, banco de dados)
-4. Reinicia o Docker e sobe os containers necessários
-5. Executa `composer install` dentro do container PHP
-6. Cria os bancos de dados no container
+## Funcionalidades
+
+- Clone automático do repositório
+- Configuração inicial do `.env`
+- Inicialização do ambiente Docker
+- Execução de `composer install`
+- Criação de banco de dados
+- Ajuste de permissões
+- Configuração automática de URL
+
+## Uso
 
 ```bash
-~/php-docker-toolkit/git-clone.sh <url-do-repositorio> [nome-do-diretorio]
+~/php-docker-toolkit/git-clone.sh <repository-url> [directory]
 ```
 
-**Exemplos:**
+### Exemplos
 
 ```bash
-# Clonar pelo nome padrão do repositório
-~/php-docker-toolkit/git-clone.sh git@github.com:empresa/meu-projeto.git
+~/php-docker-toolkit/git-clone.sh git@github.com:empresa/projeto.git
 
-# Clonar com nome de diretório customizado
-~/php-docker-toolkit/git-clone.sh https://github.com/empresa/meu-projeto.git projeto-local
+~/php-docker-toolkit/git-clone.sh https://github.com/empresa/projeto.git crm-local
 ```
-
-Durante a execução, o script fará as seguintes perguntas interativas:
-
-| Pergunta                              | Exemplo de resposta               |
-| ------------------------------------- | --------------------------------- |
-| Proprietário/agrupador do repositório | `empresa`                         |
-| Versão do PHP                         | `8`                               |
-| PHP roda em porta customizada?        | `yes` / `no`                      |
-| Porta customizada (se aplicável)      | `8080`                            |
-| Sistema de banco de dados             | `mysql` / `mariadb` / `sqlserver` |
-| Versão do banco de dados              | `8.0` / `10.6` / `2019`           |
-
-Ao final, o projeto estará acessível em `http://localhost/<diretorio>/public` (PHP ≥ 8) ou `http://localhost/<diretorio>` (PHP < 8).
 
 ---
 
-## Observações
+# Compatibilidade
 
-- Não utilize `sudo` para executar o `git-clone.sh`; o script solicitará permissões quando necessário.
-- A senha `root` padrão esperada para MySQL/MariaDB é `tiger`.
-- O script `git-clone.sh` pressupõe que o projeto usa **CodeIgniter** (detecta estrutura de `.env` com `app.baseURL` e `database.default.*`).
+Projetado principalmente para:
 
+- WSL2
+- Ubuntu
+- Docker Desktop
+- Microsoft Edge
+
+Pode ser adaptado facilmente para:
+
+- macOS
+- Linux nativo
+- Firefox
+- Google Chrome
+
+---
+
+# Roadmap
+
+- [ ] Detecção automática de containers
+- [ ] Healthcheck de containers
+- [ ] Integração com pgAdmin
+- [ ] Integração com Mongo Express
+- [ ] Menu interativo com fzf
+- [ ] Configuração centralizada
+- [ ] Logs persistentes
+- [ ] Compatibilidade multiplataforma
+
+---
+
+# Convenções
+
+## Estrutura esperada do `.env`
+
+```env
+app.baseURL=http://localhost/project
+```
+
+## Diretório esperado
+
+```bash
+~/www
+```
+
+---
+
+# Licença
+
+Consulte o arquivo `LICENSE` para mais informações.

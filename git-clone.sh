@@ -1,5 +1,6 @@
 #!/bin/bash
 
+############################################################
 # Script automatizado para clonar, preparar ambiente e sugerir próximos passos para projetos PHP
 # - Suporte para clonagem de repositórios do GitHub
 # - Suporte para clonagem de repositórios via HTTPS
@@ -8,6 +9,7 @@
 # v1.0
 # Uso: ./git-clone.sh <git-repo-url> [nome-do-diretorio]
 # OBS.: Não utilizar sudo para rodar este script, ele irá solicitar permissões se necessário.
+############################################################
 
 set -e
 
