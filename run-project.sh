@@ -5,7 +5,7 @@
 #
 # Descrição:
 #   Inicia ambiente PHP + Database, lista containers
-#   Docker e abre o projeto no Microsoft Edge.
+#   Docker e abre o projeto no navegador padrão.
 #
 #   Caso o .env não contenha app.baseURL,
 #   será utilizada uma URL padrão localhost.
@@ -70,27 +70,32 @@ start_services() {
 
 # Aguarda containers estabilizarem
 wait_services() {
-  print_title "Aguardando inicialização dos serviços"
+  echo ""
+  echo "Aguardando inicialização dos serviços ..."
   sleep 5
+}
+
+# Execução de abertura de uma url no navegador
+open_url() {
+    local url="$1"
+    cmd.exe /c start "" "$url" >/dev/null 2>&1
 }
 
 # Abre ferramentas relacionadas ao banco
 open_database_tool() {
-  case "$DATABASE" in
-    *mysql*|*mariadb*)
-      echo "Abrindo phpMyAdmin no Microsoft Edge..."
-      explorer.exe "microsoft-edge:$PHPMYADMIN_URL"
-      ;;
-    *pgsql*|*postgres*)
-      print_warning "PostgreSQL detectado sem ferramenta web configurada."
-      ;;
-    *sqlserver*)
-      print_warning "SQL Server detectado sem ferramenta web configurada."
-      ;;
-    *)
-      print_warning "Banco de dados sem integração web."
-      ;;
-  esac
+  if [[ "$DATABASE" =~ ^(mysql|mariadb) ]]; then
+    echo "Abrindo phpMyAdmin no navegador padrão..."
+    open_url "$PHPMYADMIN_URL"
+
+  elif [[ "$DATABASE" =~ ^(pgsql|postgres) ]]; then
+    print_warning "PostgreSQL detectado sem ferramenta web configurada."
+
+  elif [[ "$DATABASE" =~ ^sqlserver ]]; then
+    print_warning "SQL Server detectado sem ferramenta web configurada."
+
+  else
+    print_warning "Banco de dados sem integração web."
+  fi
 }
 
 ############################################################
@@ -141,7 +146,15 @@ fi
 # Define URL padrão caso não exista no .env
 if [ -z "$URL" ]; then
   print_warning "app.baseURL não encontrada no .env"
-  URL="http://localhost/$PROJECT"
+  case "$PHP_VERSION" in
+    *74*)
+      URL="http://localhost:8074/$PROJECT"
+      ;;
+    *)
+      URL="http://localhost/$PROJECT"
+      ;;
+  esac
+  echo "Configurações de execução definidas"
 fi
 
 # Aguarda serviços Docker
@@ -152,12 +165,10 @@ print_title "Executando aplicação"
 echo "Projeto: $URL"
 
 # Abre projeto no navegador
-echo ""
-echo "Abrindo projeto no Microsoft Edge..."
-explorer.exe "microsoft-edge:$URL"
+echo "Abrindo projeto no navegador padrão..."
+open_url "$URL"
 
 # Abre ferramenta do banco de dados
-echo ""
 open_database_tool
 
 ############################################################
